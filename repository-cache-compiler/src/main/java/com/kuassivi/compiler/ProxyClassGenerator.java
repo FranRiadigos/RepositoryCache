@@ -86,6 +86,7 @@ public class ProxyClassGenerator {
     /**
      * Supply the Qualified ClassName for the Proxy
      *
+     * @param elementUtils Element utils object
      * @param qualifiedClassName ClassName of the Annotated Class
      */
     public ProxyClassGenerator(Elements elementUtils, String qualifiedClassName) {
@@ -104,13 +105,12 @@ public class ProxyClassGenerator {
      * Adds the annotated method into the methods Map
      *
      * @param methodToInsert Method annotated
+     * @throws ProcessingException It should never occur
      */
     public void add(com.kuassivi.compiler.AnnotatedMethod<RepositoryCache> methodToInsert)
-            throws ProcessingException {
+    throws ProcessingException {
 
-        String key = methodToInsert.getSimpleMethodName()
-                     + RepositoryCacheManager.hashCode(
-                methodToInsert.getExecutableType().getParameterTypes());
+        String key = methodToInsert.getQualifiedMethodName();
 
         // This should never happen
         if (methodsMap.containsKey(key)) {
@@ -131,6 +131,7 @@ public class ProxyClassGenerator {
      * Generates the proxy cache java file
      *
      * @param filer Filer
+     * @throws IOException Generator file exception
      */
     public void generateCode(Filer filer) throws IOException {
 
@@ -194,9 +195,8 @@ public class ProxyClassGenerator {
                             "Context"), "context")
                     .returns(ClassName.get(packageName, generatedClassName));
 
-            String fileName = simpleClassName + "_" + annotatedMethod.getSimpleMethodName();
-            fileName += RepositoryCacheManager
-                    .hashCode(annotatedMethod.getExecutableType().getParameterTypes());
+            String fileName = simpleClassName + "_" + annotatedMethod.getQualifiedMethodName();
+            fileName = RepositoryCacheManager.hashMD5(fileName);
 
             method.addStatement("return new $L(context, $S, $L)",
                                 generatedClassName,
@@ -226,7 +226,7 @@ public class ProxyClassGenerator {
                            .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
                            .addAnnotation(Override.class)
                            .returns(TypeName.INT);
-        method.addStatement("return RepositoryCacheManager.hashCode(this.hashCodes)");
+        method.addStatement("return RepositoryCacheManager.hashCode((Object[])this.hashCodes)");
         classBuilder.addMethod(method.build());
 
         method = MethodSpec.methodBuilder("updateHashCode")

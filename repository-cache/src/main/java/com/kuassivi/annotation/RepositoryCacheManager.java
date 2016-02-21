@@ -17,6 +17,8 @@
 package com.kuassivi.annotation;
 
 import java.io.File;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 /**
  * @author Francisco Gonzalez-Armijo
@@ -37,6 +39,24 @@ public final class RepositoryCacheManager {
         return instance == null
                ? instance = new RepositoryCacheManager()
                : instance;
+    }
+
+    public static String hashMD5(String str) {
+        MessageDigest md = null;
+        StringBuffer sb = new StringBuffer();
+        try {
+            md = MessageDigest.getInstance("MD5");
+            md.update(str.getBytes());
+            byte byteData[] = md.digest();
+            //convert the byte to hex format method 1
+            for (int i = 0; i < byteData.length; i++) {
+                sb.append(Integer.toString((byteData[i] & 0xff) + 0x100, 16).substring(1));
+            }
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+
+        return sb.toString();
     }
 
     /**

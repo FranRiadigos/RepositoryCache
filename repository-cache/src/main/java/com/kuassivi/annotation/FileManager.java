@@ -35,6 +35,7 @@ public class FileManager {
      * so it is recommended to perform this operation using another thread.
      *
      * @param file The file to write to Disk.
+     * @param fileContent The content of the file.
      */
     public void writeToFile(File file, String fileContent) {
         if (!file.exists()) {

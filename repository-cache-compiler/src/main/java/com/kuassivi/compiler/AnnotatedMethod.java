@@ -17,9 +17,11 @@
 package com.kuassivi.compiler;
 
 import java.lang.annotation.Annotation;
+import java.util.List;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.type.ExecutableType;
+import javax.lang.model.type.TypeMirror;
 
 /**
  * @author Francisco Gonzalez-Armijo
@@ -43,6 +45,15 @@ public class AnnotatedMethod<T extends Annotation> {
 
     public String getQualifiedClassName() {
         return this.element.getEnclosingElement().asType().toString();
+    }
+
+    public String getQualifiedMethodName() {
+        List<? extends TypeMirror> elements = getExecutableType().getParameterTypes();
+        String parameters = "";
+        for (TypeMirror element : elements) {
+            parameters += "-" + element.toString();
+        }
+        return getSimpleMethodName() + parameters;
     }
 
     public T getAnnotation() {
