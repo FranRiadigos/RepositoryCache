@@ -100,7 +100,8 @@ public final class RepositoryCacheManager {
         File cacheFile = buildFile(proxyCache.getCacheDir(), proxyCache.getFileName());
         String content = proxyCache.getContent();
         if (content != null && proxyCache.getCacheTime() == 0) {
-            proxyCache.log("RepositoryCache annotation with no time or 0 means unlimited cache, "
+            proxyCache.log("\"" + proxyCache.getMethodName() + "\" method annotated with no time "
+                           + "or 0 means unlimited cache (always cached), "
                            + "so setting content cache in the proxy object is useless.");
         }
         new Thread(new CacheWriter(fileManager, cacheFile, proxyCache.getContent())).start();
