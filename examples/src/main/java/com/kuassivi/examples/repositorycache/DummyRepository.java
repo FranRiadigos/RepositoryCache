@@ -20,10 +20,17 @@ import com.kuassivi.annotation.RepositoryCache;
 
 public interface DummyRepository {
 
-    @RepositoryCache // unlimited cache
-    String getData();
+    // unlimited cache (cache with no time to end)
+    @RepositoryCache
+    void saveData(String param1);
 
-    @RepositoryCache(2000) // caches the method call until 2000 seconds
-    String getData(String param1, int param2);
+    // unlimited cache (cache with no time to end)
+    @RepositoryCache
+    String getAllData();
+
+    // caches the method call until 2000 seconds
+    // and adds a qualified name for overloaded method
+    @RepositoryCache(value = 2000, named = "allDataByParams")
+    String getAllData(String param1, int param2);
 
 }

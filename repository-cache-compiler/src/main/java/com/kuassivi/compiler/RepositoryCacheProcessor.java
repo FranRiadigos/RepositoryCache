@@ -86,8 +86,7 @@ public class RepositoryCacheProcessor extends AbstractProcessor {
                 }
 
                 // We can cast it, because we know that it's kind of ElementKind.METHOD
-                AnnotatedMethod<RepositoryCache> annotatedMethod = new AnnotatedMethod<RepositoryCache>(
-                        annotatedElement, RepositoryCache.class);
+                AnnotatedMethod annotatedMethod = new AnnotatedMethod(annotatedElement);
                 String qualifiedClassName = annotatedMethod.getQualifiedClassName();
 
 
