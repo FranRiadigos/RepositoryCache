@@ -35,14 +35,14 @@ public @interface RepositoryCache {
     /**
      * No time or 0 value means unlimited cache.
      *
-     * @return cache time in seconds
+     * @return the cache time of the method in millis
      */
-    int value() default 0;
+    long value() default 0;
 
     /**
-     * Qualifying for overloaded methods.
+     * Qualified name for overloaded methods.
      *
-     * @return renamed method or empty otherwise
+     * @return the re-named method or empty otherwise
      */
     String named() default "";
 }

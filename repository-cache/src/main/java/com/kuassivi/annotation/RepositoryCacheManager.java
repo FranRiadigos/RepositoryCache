@@ -152,7 +152,7 @@ public final class RepositoryCacheManager {
             }
             long lastModifiedTime = fileManager.getLastModifiedTime(cacheFile);
             boolean expired = System.currentTimeMillis()
-                              > (lastModifiedTime + methodCacheTime * 1000);
+                              > (lastModifiedTime + methodCacheTime);
             if (expired) {
                 fileManager.clearFile(cacheFile);
             }

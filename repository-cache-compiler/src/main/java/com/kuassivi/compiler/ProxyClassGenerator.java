@@ -170,7 +170,7 @@ public class ProxyClassGenerator {
                                 .build())
                 .addField(
                         FieldSpec
-                                .builder(TypeName.INT, "cacheTime")
+                                .builder(TypeName.LONG, "cacheTime")
                                 .addModifiers(Modifier.PRIVATE)
                                 .build())
                 .addField(
@@ -186,7 +186,7 @@ public class ProxyClassGenerator {
                           .addParameter(ClassName.get("android.content",
                                                       "Context"), "context")
                           .addParameter(String.class, "fileName")
-                          .addParameter(TypeName.INT, "cacheTime")
+                          .addParameter(TypeName.LONG, "cacheTime")
                           .addParameter(String.class, "methodName")
                           .addStatement("this.repositoryCacheManager = "
                                         + "RepositoryCacheManager.getInstance()")
@@ -271,7 +271,7 @@ public class ProxyClassGenerator {
         method = MethodSpec.methodBuilder("getCacheTime")
                            .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
                            .addAnnotation(Override.class)
-                           .returns(TypeName.INT);
+                           .returns(TypeName.LONG);
         method.addStatement("return this.cacheTime");
         classBuilder.addMethod(method.build());
 

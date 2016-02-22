@@ -33,7 +33,7 @@ public interface RepositoryProxyCache {
 
     File getCacheDir();
 
-    int getCacheTime();
+    long getCacheTime();
 
     String getFileName();
 
