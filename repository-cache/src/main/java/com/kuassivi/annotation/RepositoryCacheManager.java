@@ -1,29 +1,29 @@
 /*******************************************************************************
  * Copyright (c) 2016 Francisco Gonzalez-Armijo Riádigos
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * <p/>
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * <p/>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p/>
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
  ******************************************************************************/
 
 package com.kuassivi.annotation;
 
 import java.io.File;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 /**
  * @author Francisco Gonzalez-Armijo
  */
 public final class RepositoryCacheManager {
 
-    private static final String DEFAULT_FILE_NAME = "r_p_c_"; // repository_proxy_cache_
+    private static final String DEFAULT_FILE_NAME = "rpc_"; // repository_proxy_cache_
 
     private static RepositoryCacheManager instance;
 
@@ -37,6 +37,24 @@ public final class RepositoryCacheManager {
         return instance == null
                ? instance = new RepositoryCacheManager()
                : instance;
+    }
+
+    public static String hashMD5(String str) {
+        MessageDigest md;
+        StringBuffer sb = new StringBuffer();
+        try {
+            md = MessageDigest.getInstance("MD5");
+            md.update(str.getBytes());
+            byte byteData[] = md.digest();
+            //convert the byte to hex format method 1
+            for (int i = 0; i < byteData.length; i++) {
+                sb.append(Integer.toString((byteData[i] & 0xff) + 0x100, 16).substring(1));
+            }
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+
+        return sb.toString();
     }
 
     /**
@@ -73,35 +91,77 @@ public final class RepositoryCacheManager {
         return hashCode;
     }
 
+    /**
+     * Warning: This is an I/O operation and this method must to be performed in a different Thread.
+     *
+     * @param proxyCache the ProxyCache object
+     */
     public void save(RepositoryProxyCache proxyCache) {
         File cacheFile = buildFile(proxyCache.getCacheDir(), proxyCache.getFileName());
-        new Thread(new CacheWriter(
-                fileManager, cacheFile, String.valueOf(proxyCache.getHashCode()))
-        ).start();
+        String content = proxyCache.getContent();
+        if (content != null && proxyCache.getCacheTime() == 0) {
+            proxyCache.log("RepositoryCache annotation with no time or 0 means unlimited cache, "
+                           + "so setting content cache in the proxy object is useless.");
+        }
+        new Thread(new CacheWriter(fileManager, cacheFile, proxyCache.getContent())).start();
+    }
+
+    /**
+     * Warning: This is an I/O operation and this method must to be performed in a different Thread.
+     *
+     * @param proxyCache the ProxyCache object
+     */
+    public void clear(RepositoryProxyCache proxyCache) {
+        File cacheFile = buildFile(proxyCache.getCacheDir(), proxyCache.getFileName());
+        new Thread(new CacheClear(fileManager, cacheFile)).start();
+    }
+
+    /**
+     * Warning: This is an I/O operation and this method must to be performed in a different Thread.
+     *
+     * @param directory the File directory to clear on disk.
+     */
+    public void clearAll(File directory) {
+        new Thread(new CacheClear(fileManager, directory)).start();
     }
 
     public boolean isCached(RepositoryProxyCache proxyCache) {
         File cacheFile = buildFile(proxyCache.getCacheDir(), proxyCache.getFileName());
-        return isCached(cacheFile, proxyCache.getHashCode());
+        return isCached(cacheFile);
     }
 
-    public boolean isCached(File file, int hashCode) {
-        return fileManager.exists(file) && containsHashCode(file, hashCode);
+    public boolean isCached(File file) {
+        return fileManager.exists(file);
     }
 
+    /**
+     * Warning: This is an I/O operation and this method must to be performed in a different Thread.
+     *
+     * @param proxyCache the ProxyCache object
+     * @return true if expired, or false otherwise.
+     */
     public boolean isExpired(RepositoryProxyCache proxyCache) {
+        long methodCacheTime = proxyCache.getCacheTime();
+        boolean unlimitedCache = methodCacheTime == 0;
         File cacheFile = buildFile(proxyCache.getCacheDir(), proxyCache.getFileName());
-        if (isCached(cacheFile, proxyCache.getHashCode())) {
+        if (isCached(cacheFile)
+            && (unlimitedCache || contains(cacheFile, proxyCache.getContent()))) {
+            if (unlimitedCache) {
+                return false;
+            }
             long lastModifiedTime = fileManager.getLastModifiedTime(cacheFile);
-            long methodCacheTime = proxyCache.getCacheTime();
-            return System.currentTimeMillis() > (lastModifiedTime + methodCacheTime * 1000);
+            boolean expired = System.currentTimeMillis()
+                              > (lastModifiedTime + methodCacheTime * 1000);
+            if (expired) {
+                fileManager.clearFile(cacheFile);
+            }
+            return expired;
         }
         return true;
     }
 
-    public boolean containsHashCode(File file, int hashCode) {
-        String content = fileManager.readFileContent(file);
-        return content.equals(String.valueOf(hashCode));
+    private boolean contains(File file, String content) {
+        return fileManager.contains(file, content);
     }
 
     /**
@@ -139,7 +199,29 @@ public final class RepositoryCacheManager {
 
         @Override
         public void run() {
-            this.fileManager.writeToFile(fileToWrite, fileContent);
+            if (!fileManager.exists(fileToWrite)
+                || !fileManager.contains(fileToWrite, fileContent)) {
+                this.fileManager.writeToFile(fileToWrite, fileContent);
+            }
+        }
+    }
+
+    /**
+     * {@link Runnable} class for clearing files on disk.
+     */
+    private static class CacheClear implements Runnable {
+
+        private final FileManager fileManager;
+        private final File        fileToClear;
+
+        CacheClear(FileManager fileManager, File fileToClear) {
+            this.fileManager = fileManager;
+            this.fileToClear = fileToClear;
+        }
+
+        @Override
+        public void run() {
+            this.fileManager.clearFile(fileToClear);
         }
     }
 }

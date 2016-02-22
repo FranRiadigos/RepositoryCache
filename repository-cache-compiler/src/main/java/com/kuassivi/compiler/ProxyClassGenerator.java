@@ -19,7 +19,6 @@ package com.kuassivi.compiler;
 import com.kuassivi.annotation.RepositoryCache;
 import com.kuassivi.annotation.RepositoryCacheManager;
 import com.kuassivi.annotation.RepositoryProxyCache;
-import com.squareup.javapoet.ArrayTypeName;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.JavaFile;
@@ -86,6 +85,7 @@ public class ProxyClassGenerator {
     /**
      * Supply the Qualified ClassName for the Proxy
      *
+     * @param elementUtils Element utils object
      * @param qualifiedClassName ClassName of the Annotated Class
      */
     public ProxyClassGenerator(Elements elementUtils, String qualifiedClassName) {
@@ -104,13 +104,12 @@ public class ProxyClassGenerator {
      * Adds the annotated method into the methods Map
      *
      * @param methodToInsert Method annotated
+     * @throws ProcessingException It should never occur
      */
     public void add(com.kuassivi.compiler.AnnotatedMethod<RepositoryCache> methodToInsert)
             throws ProcessingException {
 
-        String key = methodToInsert.getSimpleMethodName()
-                     + RepositoryCacheManager.hashCode(
-                methodToInsert.getExecutableType().getParameterTypes());
+        String key = methodToInsert.getQualifiedMethodName();
 
         // This should never happen
         if (methodsMap.containsKey(key)) {
@@ -131,6 +130,7 @@ public class ProxyClassGenerator {
      * Generates the proxy cache java file
      *
      * @param filer Filer
+     * @throws IOException Generator file exception
      */
     public void generateCode(Filer filer) throws IOException {
 
@@ -159,9 +159,10 @@ public class ProxyClassGenerator {
                                 .addModifiers(Modifier.PRIVATE)
                                 .build())
                 .addField(
-                        FieldSpec.builder(ArrayTypeName.of(Integer.class), "hashCodes")
-                                 .addModifiers(Modifier.PRIVATE)
-                                 .build())
+                        FieldSpec
+                                .builder(String.class, "content")
+                                .addModifiers(Modifier.PRIVATE)
+                                .build())
                 .addField(
                         FieldSpec
                                 .builder(TypeName.INT, "cacheTime")
@@ -194,9 +195,8 @@ public class ProxyClassGenerator {
                             "Context"), "context")
                     .returns(ClassName.get(packageName, generatedClassName));
 
-            String fileName = simpleClassName + "_" + annotatedMethod.getSimpleMethodName();
-            fileName += RepositoryCacheManager
-                    .hashCode(annotatedMethod.getExecutableType().getParameterTypes());
+            String fileName = simpleClassName + "_" + annotatedMethod.getQualifiedMethodName();
+            fileName = RepositoryCacheManager.hashMD5(fileName);
 
             method.addStatement("return new $L(context, $S, $L)",
                                 generatedClassName,
@@ -217,24 +217,35 @@ public class ProxyClassGenerator {
 
         method = MethodSpec.methodBuilder("save")
                            .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
+                           .addAnnotation(ClassName.get("android.support.annotation",
+                                                        "WorkerThread"))
                            .addAnnotation(Override.class)
                            .returns(TypeName.VOID);
         method.addStatement("this.repositoryCacheManager.save(this)");
         classBuilder.addMethod(method.build());
 
-        method = MethodSpec.methodBuilder("getHashCode")
+        method = MethodSpec.methodBuilder("clear")
                            .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
-                           .addAnnotation(Override.class)
-                           .returns(TypeName.INT);
-        method.addStatement("return RepositoryCacheManager.hashCode(this.hashCodes)");
-        classBuilder.addMethod(method.build());
-
-        method = MethodSpec.methodBuilder("updateHashCode")
-                           .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
-                           .addParameter(ArrayTypeName.of(Integer.class), "hashCodes").varargs(true)
+                           .addAnnotation(ClassName.get("android.support.annotation",
+                                                        "WorkerThread"))
                            .addAnnotation(Override.class)
                            .returns(TypeName.VOID);
-        method.addStatement("this.hashCodes = hashCodes");
+        method.addStatement("this.repositoryCacheManager.clear(this)");
+        classBuilder.addMethod(method.build());
+
+        method = MethodSpec.methodBuilder("setContent")
+                           .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
+                           .addParameter(String.class, "content")
+                           .addAnnotation(Override.class)
+                           .returns(TypeName.VOID);
+        method.addStatement("this.content = content");
+        classBuilder.addMethod(method.build());
+
+        method = MethodSpec.methodBuilder("getContent")
+                           .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
+                           .addAnnotation(Override.class)
+                           .returns(String.class);
+        method.addStatement("return this.content");
         classBuilder.addMethod(method.build());
 
         method = MethodSpec.methodBuilder("getCacheDir")
@@ -267,9 +278,21 @@ public class ProxyClassGenerator {
 
         method = MethodSpec.methodBuilder("isExpired")
                            .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
+                           .addAnnotation(ClassName.get("android.support.annotation",
+                                                        "WorkerThread"))
                            .addAnnotation(Override.class)
                            .returns(TypeName.BOOLEAN);
         method.addStatement("return repositoryCacheManager.isExpired(this)");
+        classBuilder.addMethod(method.build());
+
+        method = MethodSpec.methodBuilder("log")
+                           .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
+                           .addParameter(String.class, "message")
+                           .addAnnotation(Override.class)
+                           .returns(TypeName.VOID);
+        method.addStatement("$L.w($S, message)",
+                            ClassName.get("android.util", "Log"),
+                            generatedClassName);
         classBuilder.addMethod(method.build());
     }
 }

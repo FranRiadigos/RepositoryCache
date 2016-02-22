@@ -25,9 +25,11 @@ public interface RepositoryProxyCache {
 
     void save();
 
-    int getHashCode();
+    void clear();
 
-    void updateHashCode(Integer... hashCode);
+    void setContent(String content);
+
+    String getContent();
 
     File getCacheDir();
 
@@ -38,4 +40,6 @@ public interface RepositoryProxyCache {
     boolean isCached();
 
     boolean isExpired();
+
+    void log(String message);
 }
