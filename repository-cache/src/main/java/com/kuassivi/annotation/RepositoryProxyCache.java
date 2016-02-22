@@ -37,6 +37,8 @@ public interface RepositoryProxyCache {
 
     String getFileName();
 
+    String getMethodName();
+
     boolean isCached();
 
     boolean isExpired();
