@@ -42,9 +42,7 @@ public class FileManager {
             //noinspection TryWithIdenticalCatches,EmptyFinallyBlock
             try {
                 FileWriter writer = new FileWriter(file);
-                if (fileContent != null) {
-                    writer.write(fileContent);
-                }
+                writer.write(String.valueOf(fileContent));
                 writer.close();
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
@@ -124,19 +122,41 @@ public class FileManager {
     }
 
     /**
-     * Warning: Deletes the content of a directory. This is an I/O operation and this method
+     * Returns boolean indicating whether this file contains the content value.
+     *
+     * @param file The file to check existence.
+     * @param fileContent The content value to check existence.
+     * @return true if the File and content value exists, false otherwise.
+     */
+    public boolean contains(File file, String fileContent) {
+        if(exists(file)) {
+            String content = readFileContent(file);
+            return content != null && content.equals(String.valueOf(fileContent));
+        }
+        return false;
+    }
+
+    /**
+     * Warning: Deletes the File or the content of a directory. This is an I/O operation and this method
      * executes in the main thread, so it is recommended to perform the operation using another
      * thread.
      *
-     * @param directory The directory which its content will be deleted.
+     * @param file The File which will be deleted.
      */
-    public void clearDirectory(File directory) {
-        if (directory.exists()) {
-            //noinspection ConstantConditions
-            for (File file : directory.listFiles()) {
-                //noinspection ResultOfMethodCallIgnored
-                file.delete();
-            }
+    public void clearFile(File file) {
+        if (file.exists()) {
+            try {
+                if (file.isDirectory()) {
+                    //noinspection ConstantConditions
+                    for (File f : file.listFiles()) {
+                        //noinspection ResultOfMethodCallIgnored
+                        f.delete();
+                    }
+                } else if (file.isFile()) {
+                    //noinspection ResultOfMethodCallIgnored
+                    file.delete();
+                }
+            } catch (Exception ignored){}
         }
     }
 }
