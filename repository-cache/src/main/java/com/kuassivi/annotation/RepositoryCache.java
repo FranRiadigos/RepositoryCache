@@ -23,6 +23,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
+ * Annotate method calls you want to cache.
+ *
  * @author Francisco Gonzalez-Armijo
  */
 @Documented
@@ -31,6 +33,8 @@ import java.lang.annotation.Target;
 public @interface RepositoryCache {
 
     /**
+     * No time or 0 value means unlimited cache.
+     *
      * @return cache time in seconds
      */
     int value() default 0;
