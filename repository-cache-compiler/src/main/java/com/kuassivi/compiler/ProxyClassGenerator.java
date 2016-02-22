@@ -41,6 +41,8 @@ import javax.lang.model.util.Elements;
  */
 public class ProxyClassGenerator {
 
+    public static final String TAG = "RepositoryCache";
+
     /**
      * Will be added to the name of the generated proxy class
      */
@@ -168,7 +170,12 @@ public class ProxyClassGenerator {
                                 .build())
                 .addField(
                         FieldSpec
-                                .builder(TypeName.INT, "cacheTime")
+                                .builder(TypeName.LONG, "cacheTime")
+                                .addModifiers(Modifier.PRIVATE)
+                                .build())
+                .addField(
+                        FieldSpec
+                                .builder(String.class, "methodName")
                                 .addModifiers(Modifier.PRIVATE)
                                 .build());
 
@@ -179,12 +186,14 @@ public class ProxyClassGenerator {
                           .addParameter(ClassName.get("android.content",
                                                       "Context"), "context")
                           .addParameter(String.class, "fileName")
-                          .addParameter(TypeName.INT, "cacheTime")
+                          .addParameter(TypeName.LONG, "cacheTime")
+                          .addParameter(String.class, "methodName")
                           .addStatement("this.repositoryCacheManager = "
                                         + "RepositoryCacheManager.getInstance()")
                           .addStatement("this.context = context")
                           .addStatement("this.fileName = fileName")
-                          .addStatement("this.cacheTime = cacheTime");
+                          .addStatement("this.cacheTime = cacheTime")
+                          .addStatement("this.methodName = methodName");
         classBuilder.addMethod(constructor.build());
 
         for (AnnotatedMethod annotatedMethod : methodsMap.values()) {
@@ -200,9 +209,11 @@ public class ProxyClassGenerator {
             String fileName = simpleClassName + "_" + annotatedMethod.getFullMethodName();
             fileName = RepositoryCacheManager.hashMD5(fileName);
 
-            method.addStatement("return new $L(context, $S, $L)",
+            method.addStatement("return new $L(context, $S, $L, $S)",
                                 generatedClassName,
-                                fileName, annotatedMethod.getAnnotation().value());
+                                fileName,
+                                annotatedMethod.getAnnotation().value(),
+                                annotatedMethod.getQualifiedMethodName());
             classBuilder.addMethod(method.build());
         }
 
@@ -260,7 +271,7 @@ public class ProxyClassGenerator {
         method = MethodSpec.methodBuilder("getCacheTime")
                            .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
                            .addAnnotation(Override.class)
-                           .returns(TypeName.INT);
+                           .returns(TypeName.LONG);
         method.addStatement("return this.cacheTime");
         classBuilder.addMethod(method.build());
 
@@ -269,6 +280,13 @@ public class ProxyClassGenerator {
                            .addAnnotation(Override.class)
                            .returns(String.class);
         method.addStatement("return this.fileName");
+        classBuilder.addMethod(method.build());
+
+        method = MethodSpec.methodBuilder("getMethodName")
+                           .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
+                           .addAnnotation(Override.class)
+                           .returns(String.class);
+        method.addStatement("return this.methodName");
         classBuilder.addMethod(method.build());
 
         method = MethodSpec.methodBuilder("isCached")
@@ -292,9 +310,8 @@ public class ProxyClassGenerator {
                            .addParameter(String.class, "message")
                            .addAnnotation(Override.class)
                            .returns(TypeName.VOID);
-        method.addStatement("$T.w($S, message)",
-                            ClassName.get("android.util", "Log"),
-                            generatedClassName);
+        method.addStatement("$T.w($S, $S + message)",
+                            ClassName.get("android.util", "Log"), TAG, generatedClassName + ": ");
         classBuilder.addMethod(method.build());
     }
 }

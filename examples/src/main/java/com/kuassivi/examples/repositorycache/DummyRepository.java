@@ -18,19 +18,21 @@ package com.kuassivi.examples.repositorycache;
 
 import com.kuassivi.annotation.RepositoryCache;
 
+import android.text.format.DateUtils;
+
 public interface DummyRepository {
 
-    // unlimited cache (cache with no time to end)
+    // unlimited cache (the cached method has not a limited time to expire)
     @RepositoryCache
     void saveData(String param1);
 
-    // unlimited cache (cache with no time to end)
+    // unlimited cache (the cached method has not a limited time to expire)
     @RepositoryCache
     String getAllData();
 
-    // caches the method call until 2000 seconds
-    // and adds a qualified name for overloaded method
-    @RepositoryCache(value = 2000, named = "allDataByParams")
+    // caches this method call until 5 minutes, then expires
+    // replaces the method name into one qualified
+    @RepositoryCache(value = DateUtils.MINUTE_IN_MILLIS * 5, named = "allDataByParams")
     String getAllData(String param1, int param2);
 
 }
