@@ -4,3 +4,36 @@ apply plugin: 'java'
 // used. Android can't interpret Java 8 byte code.
 sourceCompatibility = JavaVersion.VERSION_1_7
 targetCompatibility = JavaVersion.VERSION_1_7
+
+ext {
+    // Where you will see your artifact in Bintray's web interface
+    // The "bintrayName" should match the name of the Bintray repro.
+    bintrayRepo = 'maven'
+    bintrayName = 'repository-cache'
+
+    // Maven metadata
+    publishedGroupId = 'com.kuassivi.annotation'
+    libraryName = 'RepositoryCache'
+    // Save yourself a head ache, and set this equal to the name of the Android Studio library
+    // module. The artifact name needs to match the name of the library.
+    artifact = 'repository-cache'
+
+    libraryDescription = 'Proxy Cache Manager annotation that helps you to cache your repository method calls.'
+
+    siteUrl = project.hasProperty('projectWebsite') ? projectWebsite : ''
+    gitUrl = siteUrl + '.git'
+    libraryVersion = project.hasProperty('projectVersionName') ? projectVersionName : '0'
+
+    developerId = project.hasProperty('bintray.user') ? project['bintray.user'] : 'noUser'
+    developerName = project.hasProperty('developerName') ? developerName : 'noName'
+    developerEmail = project.hasProperty('developerEmail') ? developerEmail : 'noEmail'
+
+    licenseName = 'The Apache Software License, Version 2.0'
+    licenseUrl = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+    allLicenses = ["Apache-2.0"]
+
+    mavenPackagin = "jar"
+}
+
+apply from: "${rootDir}/../bintray.gradle"
+apply from: "${rootDir}/../install.gradle"
