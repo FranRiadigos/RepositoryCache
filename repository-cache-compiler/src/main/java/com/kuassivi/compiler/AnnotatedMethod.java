@@ -16,7 +16,8 @@
 
 package com.kuassivi.compiler;
 
-import java.lang.annotation.Annotation;
+import com.kuassivi.annotation.RepositoryCache;
+
 import java.util.List;
 
 import javax.lang.model.element.Element;
@@ -25,17 +26,16 @@ import javax.lang.model.type.TypeMirror;
 
 /**
  * @author Francisco Gonzalez-Armijo
- * @param <T> Annotation class
  */
-public class AnnotatedMethod<T extends Annotation> {
+public class AnnotatedMethod {
 
     private Element        element;
-    private T              annotation;
-    private ExecutableType executableType;
+    private RepositoryCache annotation;
+    private ExecutableType  executableType;
 
-    public AnnotatedMethod(Element element, Class<T> clazz) {
+    public AnnotatedMethod(Element element) {
         this.element = element;
-        this.annotation = element.getAnnotation(clazz);
+        this.annotation = element.getAnnotation(RepositoryCache.class);
         this.executableType = ((ExecutableType) element.asType());
     }
 
@@ -43,11 +43,19 @@ public class AnnotatedMethod<T extends Annotation> {
         return this.element.getSimpleName().toString();
     }
 
+    public String getQualifiedMethodName() {
+        String methodName = getAnnotation().named();
+        if (methodName.trim().isEmpty()) {
+            methodName = getSimpleMethodName();
+        }
+        return methodName;
+    }
+
     public String getQualifiedClassName() {
         return this.element.getEnclosingElement().asType().toString();
     }
 
-    public String getQualifiedMethodName() {
+    public String getFullMethodName() {
         List<? extends TypeMirror> elements = getExecutableType().getParameterTypes();
         String parameters = "";
         for (TypeMirror element : elements) {
@@ -56,7 +64,7 @@ public class AnnotatedMethod<T extends Annotation> {
         return getSimpleMethodName() + parameters;
     }
 
-    public T getAnnotation() {
+    public RepositoryCache getAnnotation() {
         return this.annotation;
     }
 

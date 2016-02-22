@@ -38,4 +38,11 @@ public @interface RepositoryCache {
      * @return cache time in seconds
      */
     int value() default 0;
+
+    /**
+     * Qualifying for overloaded methods.
+     *
+     * @return renamed method or empty otherwise
+     */
+    String named() default "";
 }

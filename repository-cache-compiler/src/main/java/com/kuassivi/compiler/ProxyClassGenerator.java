@@ -16,7 +16,6 @@
 
 package com.kuassivi.compiler;
 
-import com.kuassivi.annotation.RepositoryCache;
 import com.kuassivi.annotation.RepositoryCacheManager;
 import com.kuassivi.annotation.RepositoryProxyCache;
 import com.squareup.javapoet.ClassName;
@@ -50,7 +49,7 @@ public class ProxyClassGenerator {
     /**
      * Will be added to the name of the generated method
      */
-    private static final String METHOD_PREFIX = "cache_";
+    private static final String METHOD_PREFIX = "method_";
 
     /**
      * The full qualified name of the Class that will be processed
@@ -80,7 +79,7 @@ public class ProxyClassGenerator {
     /**
      * Maps all annotated methods
      */
-    private Map<String, com.kuassivi.compiler.AnnotatedMethod<RepositoryCache>> methodsMap = new LinkedHashMap<String, com.kuassivi.compiler.AnnotatedMethod<RepositoryCache>>();
+    private Map<String, AnnotatedMethod> methodsMap = new LinkedHashMap<String, AnnotatedMethod>();
 
     /**
      * Supply the Qualified ClassName for the Proxy
@@ -104,26 +103,30 @@ public class ProxyClassGenerator {
      * Adds the annotated method into the methods Map
      *
      * @param methodToInsert Method annotated
-     * @throws ProcessingException It should never occur
+     * @throws ProcessingException Method already exist, please use the named value
      */
-    public void add(com.kuassivi.compiler.AnnotatedMethod<RepositoryCache> methodToInsert)
-            throws ProcessingException {
+    public void add(AnnotatedMethod methodToInsert) throws ProcessingException {
 
-        String key = methodToInsert.getQualifiedMethodName();
+        String methodName = methodToInsert.getQualifiedMethodName();
 
-        // This should never happen
-        if (methodsMap.containsKey(key)) {
-            // Method already exist
+        // Checks for overloaded methods
+        if (methodsMap.containsKey(methodName)) {
+            // Method already exist in Map
             throw new ProcessingException(methodToInsert.getElement(),
-                                          "Conflict: The method %s is already annotated in the %s "
-                                          + "class with the following parameter types: %s",
-                                          methodToInsert.getSimpleMethodName(),
+                                          "Conflict: The method \"%1$s\" already exists in %2$s"
+                                          + CLASS_SUFFIX + "."
+                                          + "class"
+                                          + "\nThe checked method in conflict is %1$s( %3$s )."
+                                          + "\nThis is an overloaded method, so please add the "
+                                          + "\"named\" attribute in the annotated method like "
+                                          + "RepositoryCache(named = \"differentMethodName\").",
+                                          methodName,
                                           this.simpleClassName,
                                           methodToInsert.getExecutableType().getParameterTypes()
                                                         .toString());
         }
 
-        methodsMap.put(key, methodToInsert);
+        methodsMap.put(methodName, methodToInsert);
     }
 
     /**
@@ -184,18 +187,17 @@ public class ProxyClassGenerator {
                           .addStatement("this.cacheTime = cacheTime");
         classBuilder.addMethod(constructor.build());
 
-        for (com.kuassivi.compiler.AnnotatedMethod<RepositoryCache> annotatedMethod : methodsMap
-                .values()) {
+        for (AnnotatedMethod annotatedMethod : methodsMap.values()) {
 
             MethodSpec.Builder method = MethodSpec
-                    .methodBuilder(METHOD_PREFIX + annotatedMethod.getSimpleMethodName())
+                    .methodBuilder(METHOD_PREFIX + annotatedMethod.getQualifiedMethodName())
                     .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                     .addParameter(ClassName.get(
                             "android.content",
                             "Context"), "context")
                     .returns(ClassName.get(packageName, generatedClassName));
 
-            String fileName = simpleClassName + "_" + annotatedMethod.getQualifiedMethodName();
+            String fileName = simpleClassName + "_" + annotatedMethod.getFullMethodName();
             fileName = RepositoryCacheManager.hashMD5(fileName);
 
             method.addStatement("return new $L(context, $S, $L)",
@@ -290,7 +292,7 @@ public class ProxyClassGenerator {
                            .addParameter(String.class, "message")
                            .addAnnotation(Override.class)
                            .returns(TypeName.VOID);
-        method.addStatement("$L.w($S, message)",
+        method.addStatement("$T.w($S, message)",
                             ClassName.get("android.util", "Log"),
                             generatedClassName);
         classBuilder.addMethod(method.build());
