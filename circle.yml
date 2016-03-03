@@ -10,7 +10,6 @@ dependencies:
 
 test:
   override:
-    - ./gradlew build check
-    - ./gradlew assembleRelease
+    - ./gradlew clean build check
     - ./gradlew test
-    - cp -r ~/Android-app/app/build/outputs $CIRCLE_ARTIFACTS
+    - cp -r ~/RepositoryCache/app/build/outputs $CIRCLE_ARTIFACTS
