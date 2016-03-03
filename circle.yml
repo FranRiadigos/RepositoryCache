@@ -3,15 +3,21 @@ machine:
     GRADLE_OPTS: '-Dorg.gradle.parallel=true -Dorg.gradle.daemon=true -Dorg.gradle.jvmargs="-Xmx1024m -XX:PermSize=1G -XX:MaxPermSize=1G -XX:+HeapDumpOnOutOfMemoryError"'
 
 dependencies:
+  cache_directories:
+    - ~/.android
+    - ~/android
   pre:
     - echo y | android update sdk --no-ui --all --filter "tools,platform-tools,android-23"
     - echo y | android update sdk --no-ui --all --filter "build-tools-23.0.2"
 
 test:
   override:
-    - ./gradlew clean -PdisablePreDex=true
-    - ./gradlew build -PdisablePreDex=true
-    - ./gradlew test -PdisablePreDex=true
+    - echo "Running JUnit tests!"
+    - ./gradlew clean -PdisablePreDex
+    - ./gradlew build -PdisablePreDex
+    - ./gradlew test -PdisablePreDex
   post:
     - mkdir -p $CIRCLE_TEST_REPORTS/junit/
-    - find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} $CIRCLE_TEST_REPORTS/junit/ \;
+    - cp -r /RepositoryCache/repository-cache-compiler/build/outputs $CIRCLE_ARTIFACTS
+    - cp -r /RepositoryCache/repository-cache/build/reports/* $CIRCLE_TEST_REPORTS/junit/
+    - cp -r /RepositoryCache/repository-cache-compiler/build/reports/* $CIRCLE_TEST_REPORTS/junit/
