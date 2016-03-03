@@ -14,32 +14,20 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.kuassivi.annotation;
-
-import java.io.File;
+package com.kuassivi.examples.repository_cache.dummy;
 
 /**
- * @author Francisco Gonzalez-Armijo
+ * Local data strategy
  */
-public interface RepositoryProxyCache {
+public class MyLocalData implements MyRepository {
 
-    void persist();
+    @Override
+    public Object[] getAllDataOnce() {
+        throw new UnsupportedOperationException("not yet implemented");
+    }
 
-    void persist(String content);
-
-    void evict();
-
-    void select(Object cacheKey);
-
-    String getContent();
-
-    File getCacheDir();
-
-    long getCacheTime();
-
-    String getFileName();
-
-    boolean isCached();
-
-    boolean isExpired();
+    @Override
+    public Object getDataById(int id) {
+        throw new UnsupportedOperationException("not yet implemented");
+    }
 }

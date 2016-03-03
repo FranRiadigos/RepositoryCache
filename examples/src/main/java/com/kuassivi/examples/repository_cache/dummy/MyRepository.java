@@ -14,25 +14,29 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.kuassivi.examples.repositorycache;
+package com.kuassivi.examples.repository_cache.dummy;
 
 import com.kuassivi.annotation.RepositoryCache;
 
 import android.text.format.DateUtils;
 
-public interface DummyRepository {
+public interface MyRepository {
 
-    // unlimited cache (the cached method has not a limited time to expire)
+    /**
+     * Calls on this method will be cached indefinitely, unless you evict it later.
+     *
+     * @return any retrieved data
+     */
     @RepositoryCache
-    void saveData(String param1);
+    Object[] getAllDataOnce();
 
-    // unlimited cache (the cached method has not a limited time to expire)
-    @RepositoryCache
-    String getAllData();
-
-    // caches this method call until 5 minutes, then expires
-    // replaces the method name into one qualified
-    @RepositoryCache(value = DateUtils.MINUTE_IN_MILLIS * 5, named = "allDataByParams")
-    String getAllData(String param1, int param2);
-
+    /**
+     * Calls on this method with a specific id will be cached until 60 minutes each one,
+     * then expires.
+     *
+     * @param id any Id
+     * @return any retrieved data
+     */
+    @RepositoryCache(DateUtils.MINUTE_IN_MILLIS * 60)
+    Object getDataById(int id);
 }

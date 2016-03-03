@@ -1,4 +1,4 @@
-package com.kuassivi.examples.repositorycache;
+package com.kuassivi.examples.repository_cache;
 
 import android.app.Application;
 import android.test.ApplicationTestCase;

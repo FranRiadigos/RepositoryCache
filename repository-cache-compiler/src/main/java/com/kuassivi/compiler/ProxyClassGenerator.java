@@ -41,17 +41,10 @@ import javax.lang.model.util.Elements;
  */
 public class ProxyClassGenerator {
 
-    public static final String TAG = "RepositoryCache";
-
     /**
      * Will be added to the name of the generated proxy class
      */
     private static final String CLASS_SUFFIX = "ProxyCache";
-
-    /**
-     * Will be added to the name of the generated method
-     */
-    private static final String METHOD_PREFIX = "method_";
 
     /**
      * The full qualified name of the Class that will be processed
@@ -119,9 +112,9 @@ public class ProxyClassGenerator {
                                           + CLASS_SUFFIX + "."
                                           + "class"
                                           + "\nThe checked method in conflict is %1$s( %3$s )."
-                                          + "\nThis is an overloaded method, so please add the "
+                                          + "\nWe cannot process overloaded methods, so please add the "
                                           + "\"named\" attribute in the annotated method like "
-                                          + "RepositoryCache(named = \"differentMethodName\").",
+                                          + "RepositoryCache(named = \"%1$s_2\").",
                                           methodName,
                                           this.simpleClassName,
                                           methodToInsert.getExecutableType().getParameterTypes()
@@ -154,8 +147,7 @@ public class ProxyClassGenerator {
                                 .build())
                 .addField(
                         FieldSpec
-                                .builder(ClassName.get("android.content",
-                                                       "Context"), "context")
+                                .builder(File.class, "cacheDir")
                                 .addModifiers(Modifier.PRIVATE)
                                 .build())
                 .addField(
@@ -165,17 +157,12 @@ public class ProxyClassGenerator {
                                 .build())
                 .addField(
                         FieldSpec
-                                .builder(String.class, "content")
+                                .builder(String.class, "cacheKey")
                                 .addModifiers(Modifier.PRIVATE)
                                 .build())
                 .addField(
                         FieldSpec
                                 .builder(TypeName.LONG, "cacheTime")
-                                .addModifiers(Modifier.PRIVATE)
-                                .build())
-                .addField(
-                        FieldSpec
-                                .builder(String.class, "methodName")
                                 .addModifiers(Modifier.PRIVATE)
                                 .build());
 
@@ -183,37 +170,31 @@ public class ProxyClassGenerator {
         MethodSpec.Builder constructor =
                 MethodSpec.constructorBuilder()
                           .addModifiers(Modifier.PRIVATE)
-                          .addParameter(ClassName.get("android.content",
-                                                      "Context"), "context")
+                          .addParameter(File.class, "cacheDir")
                           .addParameter(String.class, "fileName")
                           .addParameter(TypeName.LONG, "cacheTime")
-                          .addParameter(String.class, "methodName")
                           .addStatement("this.repositoryCacheManager = "
                                         + "RepositoryCacheManager.getInstance()")
-                          .addStatement("this.context = context")
+                          .addStatement("this.cacheDir = cacheDir")
                           .addStatement("this.fileName = fileName")
-                          .addStatement("this.cacheTime = cacheTime")
-                          .addStatement("this.methodName = methodName");
+                          .addStatement("this.cacheTime = cacheTime");
         classBuilder.addMethod(constructor.build());
 
         for (AnnotatedMethod annotatedMethod : methodsMap.values()) {
 
             MethodSpec.Builder method = MethodSpec
-                    .methodBuilder(METHOD_PREFIX + annotatedMethod.getQualifiedMethodName())
+                    .methodBuilder(annotatedMethod.getQualifiedMethodName())
                     .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                    .addParameter(ClassName.get(
-                            "android.content",
-                            "Context"), "context")
+                    .addParameter(File.class, "cacheDir")
                     .returns(ClassName.get(packageName, generatedClassName));
 
             String fileName = simpleClassName + "_" + annotatedMethod.getFullMethodName();
             fileName = RepositoryCacheManager.hashMD5(fileName);
 
-            method.addStatement("return new $L(context, $S, $L, $S)",
+            method.addStatement("return new $L(cacheDir, $S, $L)",
                                 generatedClassName,
                                 fileName,
-                                annotatedMethod.getAnnotation().value(),
-                                annotatedMethod.getQualifiedMethodName());
+                                annotatedMethod.getAnnotation().value());
             classBuilder.addMethod(method.build());
         }
 
@@ -228,44 +209,48 @@ public class ProxyClassGenerator {
     private void addProxyMethods(TypeSpec.Builder classBuilder) {
         MethodSpec.Builder method;
 
-        method = MethodSpec.methodBuilder("save")
+        method = MethodSpec.methodBuilder("persist")
                            .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
-                           .addAnnotation(ClassName.get("android.support.annotation",
-                                                        "WorkerThread"))
                            .addAnnotation(Override.class)
                            .returns(TypeName.VOID);
-        method.addStatement("this.repositoryCacheManager.save(this)");
+        method.addStatement("this.repositoryCacheManager.persist(this)");
         classBuilder.addMethod(method.build());
 
-        method = MethodSpec.methodBuilder("clear")
-                           .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
-                           .addAnnotation(ClassName.get("android.support.annotation",
-                                                        "WorkerThread"))
-                           .addAnnotation(Override.class)
-                           .returns(TypeName.VOID);
-        method.addStatement("this.repositoryCacheManager.clear(this)");
-        classBuilder.addMethod(method.build());
-
-        method = MethodSpec.methodBuilder("setContent")
+        method = MethodSpec.methodBuilder("persist")
                            .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
                            .addParameter(String.class, "content")
                            .addAnnotation(Override.class)
                            .returns(TypeName.VOID);
-        method.addStatement("this.content = content");
+        method.addStatement("this.repositoryCacheManager.persist(this, content)");
+        classBuilder.addMethod(method.build());
+
+        method = MethodSpec.methodBuilder("evict")
+                           .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
+                           .addAnnotation(Override.class)
+                           .returns(TypeName.VOID);
+        method.addStatement("this.repositoryCacheManager.evict(this)");
+        classBuilder.addMethod(method.build());
+
+        method = MethodSpec.methodBuilder("select")
+                           .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
+                           .addParameter(Object.class, "cacheKey")
+                           .addAnnotation(Override.class)
+                           .returns(TypeName.VOID);
+        method.addStatement("this.cacheKey = String.valueOf(cacheKey)");
         classBuilder.addMethod(method.build());
 
         method = MethodSpec.methodBuilder("getContent")
                            .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
                            .addAnnotation(Override.class)
                            .returns(String.class);
-        method.addStatement("return this.content");
+        method.addStatement("return repositoryCacheManager.getContent(this)");
         classBuilder.addMethod(method.build());
 
         method = MethodSpec.methodBuilder("getCacheDir")
                            .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
                            .addAnnotation(Override.class)
                            .returns(File.class);
-        method.addStatement("return this.context.getCacheDir()");
+        method.addStatement("return this.cacheDir");
         classBuilder.addMethod(method.build());
 
         method = MethodSpec.methodBuilder("getCacheTime")
@@ -279,14 +264,7 @@ public class ProxyClassGenerator {
                            .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
                            .addAnnotation(Override.class)
                            .returns(String.class);
-        method.addStatement("return this.fileName");
-        classBuilder.addMethod(method.build());
-
-        method = MethodSpec.methodBuilder("getMethodName")
-                           .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
-                           .addAnnotation(Override.class)
-                           .returns(String.class);
-        method.addStatement("return this.methodName");
+        method.addStatement("return RepositoryCacheManager.hashMD5(this.fileName + this.cacheKey)");
         classBuilder.addMethod(method.build());
 
         method = MethodSpec.methodBuilder("isCached")
@@ -298,20 +276,9 @@ public class ProxyClassGenerator {
 
         method = MethodSpec.methodBuilder("isExpired")
                            .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
-                           .addAnnotation(ClassName.get("android.support.annotation",
-                                                        "WorkerThread"))
                            .addAnnotation(Override.class)
                            .returns(TypeName.BOOLEAN);
         method.addStatement("return repositoryCacheManager.isExpired(this)");
-        classBuilder.addMethod(method.build());
-
-        method = MethodSpec.methodBuilder("log")
-                           .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
-                           .addParameter(String.class, "message")
-                           .addAnnotation(Override.class)
-                           .returns(TypeName.VOID);
-        method.addStatement("$T.w($S, $S + message)",
-                            ClassName.get("android.util", "Log"), TAG, generatedClassName + ": ");
         classBuilder.addMethod(method.build());
     }
 }

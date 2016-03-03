@@ -38,19 +38,17 @@ public class FileManager {
      * @param fileContent The content of the file.
      */
     public void writeToFile(File file, String fileContent) {
-        if (!file.exists()) {
-            //noinspection TryWithIdenticalCatches,EmptyFinallyBlock
-            try {
-                FileWriter writer = new FileWriter(file);
-                writer.write(String.valueOf(fileContent));
-                writer.close();
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            } finally {
+        //noinspection TryWithIdenticalCatches,EmptyFinallyBlock
+        try {
+            FileWriter writer = new FileWriter(file);
+            writer.write(fileContent);
+            writer.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
 
-            }
         }
     }
 
@@ -131,7 +129,7 @@ public class FileManager {
     public boolean contains(File file, String fileContent) {
         if(exists(file)) {
             String content = readFileContent(file);
-            return content != null && content.equals(String.valueOf(fileContent));
+            return content != null && content.equals(fileContent);
         }
         return false;
     }
