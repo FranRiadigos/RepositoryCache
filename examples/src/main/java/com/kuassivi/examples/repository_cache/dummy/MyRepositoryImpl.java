@@ -15,7 +15,6 @@
 package com.kuassivi.examples.repository_cache.dummy;
 
 import com.kuassivi.annotation.RepositoryProxyCache;
-import com.kuassivi.examples.repository_cache.MyRepositoryProxyCache;
 
 import android.content.Context;
 
@@ -65,7 +64,7 @@ public class MyRepositoryImpl implements MyRepository {
     public Object[] getAllDataOnce() {
 
         // Gets an instance of the cached method
-        RepositoryProxyCache cache = MyRepositoryProxyCache.getAllData(this.cacheDir);
+        RepositoryProxyCache cache = MyRepositoryProxyCache.getAllDataOnce(this.cacheDir);
 
         // No need to select any particular cache ID
 

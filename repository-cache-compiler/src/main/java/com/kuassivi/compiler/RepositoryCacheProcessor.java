@@ -16,6 +16,7 @@
 
 package com.kuassivi.compiler;
 
+import com.google.auto.common.SuperficialValidation;
 import com.google.auto.service.AutoService;
 
 import com.kuassivi.annotation.RepositoryCache;
@@ -47,8 +48,6 @@ public class RepositoryCacheProcessor extends AbstractProcessor {
     private Elements elementUtils;
     private Filer    filer;
 
-    private Map<String, com.kuassivi.compiler.ProxyClassGenerator> proxyClassGeneratorMap = new LinkedHashMap<String, com.kuassivi.compiler.ProxyClassGenerator>();
-
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
         super.init(processingEnv);
@@ -73,23 +72,26 @@ public class RepositoryCacheProcessor extends AbstractProcessor {
 
         try {
 
+            Map<String, ProxyClassGenerator> proxyClassGeneratorMap =
+                    new LinkedHashMap<String, ProxyClassGenerator>();
+
             // Scan classes
             for (Element annotatedElement : roundEnv
                     .getElementsAnnotatedWith(RepositoryCache.class)) {
 
-                // Check if a method has been annotated with @Factory
+                // Check if a method has been annotated with @RepositoryCache
                 if (annotatedElement.getKind() != ElementKind.METHOD) {
-                    throw new com.kuassivi.compiler.ProcessingException(annotatedElement,
-                                                                        "Only methods can be annotated with @%s",
-                                                                        RepositoryCache.class
-                                                                                .getSimpleName());
+                    throw new ProcessingException(annotatedElement,
+                                                  "Only methods can be annotated with @%s",
+                                                  RepositoryCache.class.getSimpleName());
                 }
 
-                // We can cast it, because we know that it's kind of ElementKind.METHOD
+                if (!SuperficialValidation.validateElement(annotatedElement))
+                    continue;
+
+                // Wrap the Element
                 AnnotatedMethod annotatedMethod = new AnnotatedMethod(annotatedElement);
                 String qualifiedClassName = annotatedMethod.getQualifiedClassName();
-
-
 
                 /*
                  * Required rules:
@@ -105,16 +107,16 @@ public class RepositoryCacheProcessor extends AbstractProcessor {
 
                         .getErrors();
 
+                // Checks for errors
                 if (!errors.isEmpty()) {
                     Utils.errors(annotatedElement, errors);
                     return true;
                 }
 
-                com.kuassivi.compiler.ProxyClassGenerator generatorClass = proxyClassGeneratorMap
-                        .get(qualifiedClassName);
+                // Generate Proxy Classes
+                ProxyClassGenerator generatorClass = proxyClassGeneratorMap.get(qualifiedClassName);
                 if (generatorClass == null) {
-                    generatorClass = new com.kuassivi.compiler.ProxyClassGenerator(elementUtils,
-                                                                                   qualifiedClassName);
+                    generatorClass = new ProxyClassGenerator(elementUtils, qualifiedClassName);
                     proxyClassGeneratorMap.put(qualifiedClassName, generatorClass);
                     Utils.note("Processing class " + qualifiedClassName);
                 }
@@ -123,13 +125,12 @@ public class RepositoryCacheProcessor extends AbstractProcessor {
                 generatorClass.add(annotatedMethod);
             }
 
-            // Generate File Code only once everything is fine
-            for (com.kuassivi.compiler.ProxyClassGenerator generatorClass : proxyClassGeneratorMap
-                    .values()) {
+            // Generate File Code only once
+            for (ProxyClassGenerator generatorClass : proxyClassGeneratorMap.values()) {
                 generatorClass.generateCode(filer);
             }
-            proxyClassGeneratorMap.clear(); // release
-        } catch (com.kuassivi.compiler.ProcessingException e) {
+
+        } catch (ProcessingException e) {
             Utils.error(e.getElement(), e.getMessage());
         } catch (IOException e) {
             Utils.error(null, e.getMessage());
