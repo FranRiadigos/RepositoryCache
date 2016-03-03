@@ -22,9 +22,17 @@ allprojects {
 }
 
 def props = new Properties()
-props.load(new FileInputStream("${rootDir}/local.properties"))
-props.each { key, val ->
-    project.set(key, val)
+File localProp = project.rootProject.file('local.properties')
+
+ext {
+    localPropExist = localProp.exists()
+}
+
+if(localPropExist) {
+    props.load(localProp.newDataInputStream())
+    props.each { key, val ->
+        project.set(key, val)
+    }
 }
 
 task clean(type: Delete) {
