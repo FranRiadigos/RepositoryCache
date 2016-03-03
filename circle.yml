@@ -1,0 +1,16 @@
+machine:
+  environment:
+    _JAVA_OPTIONS: "-Xmx1024m -XX:PermSize=1G -XX:MaxPermSize=3G"
+    GRADLE_OPTS: '-Dorg.gradle.parallel=true -Dorg.gradle.jvmargs="-Xmx1024m -XX:PermSize=1G -XX:MaxPermSize=1G -XX:+HeapDumpOnOutOfMemoryError"'
+
+dependencies:
+  pre:
+    - echo y | android update sdk --no-ui --all --filter "tools,platform-tools,android-23"
+    - echo y | android update sdk --no-ui --all --filter "build-tools-23.0.2"
+
+test:
+  override:
+    - ./gradlew build check
+    - ./gradlew assembleRelease
+    - ./gradlew test
+    - cp -r ~/Android-app/app/build/outputs $CIRCLE_ARTIFACTS
