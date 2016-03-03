@@ -32,8 +32,10 @@ ext {
     licenseUrl = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
     allLicenses = ["Apache-2.0"]
 
-    mavenPackagin = "jar"
+    mavenPackagin = "pom"
 }
 
-apply from: "${rootDir}/../bintray.gradle"
-apply from: "${rootDir}/../install.gradle"
+if(localPropExist) {
+    apply from: "${rootDir}/../bintray.gradle"
+    apply from: "${rootDir}/../install.gradle"
+}
