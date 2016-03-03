@@ -61,7 +61,7 @@ public class AnnotatedMethod {
         for (TypeMirror element : elements) {
             parameters += "-" + element.toString();
         }
-        return getSimpleMethodName() + parameters;
+        return getQualifiedMethodName() + parameters;
     }
 
     public RepositoryCache getAnnotation() {
