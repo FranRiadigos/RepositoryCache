@@ -9,10 +9,9 @@ dependencies:
 
 test:
   override:
-    - ./gradlew clean -PdisablePreDex
-    - ./gradlew build -PdisablePreDex
-    - ./gradlew test -PdisablePreDex
-    - cp -r repository-cache/build/outputs $CIRCLE_ARTIFACTS
-    - cp -r repository-cache-compiler/build/outputs $CIRCLE_ARTIFACTS
-    - cp -r repository-cache/build/reports/* $CIRCLE_TEST_REPORTS
-    - cp -r repository-cache-compiler/build/reports/* $CIRCLE_TEST_REPORTS
+    - ./gradlew clean -PdisablePreDex=true
+    - ./gradlew build -PdisablePreDex=true
+    - ./gradlew test -PdisablePreDex=true
+  post:
+    - mkdir -p $CIRCLE_TEST_REPORTS/junit/
+    - find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} $CIRCLE_TEST_REPORTS/junit/ \;
