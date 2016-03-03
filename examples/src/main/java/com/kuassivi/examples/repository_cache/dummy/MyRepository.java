@@ -31,12 +31,12 @@ public interface MyRepository {
     Object[] getAllDataOnce();
 
     /**
-     * Calls on this method with a specific id will be cached until 60 minutes each one,
+     * Calls on this method with a specific id will be cached until 30 minutes each one,
      * then expires.
      *
      * @param id any Id
      * @return any retrieved data
      */
-    @RepositoryCache(DateUtils.MINUTE_IN_MILLIS * 60)
+    @RepositoryCache(DateUtils.MINUTE_IN_MILLIS * 30)
     Object getDataById(int id);
 }
