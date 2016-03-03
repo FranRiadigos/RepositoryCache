@@ -12,5 +12,7 @@ test:
     - ./gradlew clean -PdisablePreDex
     - ./gradlew build -PdisablePreDex
     - ./gradlew test -PdisablePreDex
-    - cp -r app/build/outputs $CIRCLE_ARTIFACTS
-    - cp -r app/build/reports/* $CIRCLE_TEST_REPORTS
+    - cp -r repository-cache/build/outputs $CIRCLE_ARTIFACTS
+    - cp -r repository-cache-compiler/build/outputs $CIRCLE_ARTIFACTS
+    - cp -r repository-cache/build/reports/* $CIRCLE_TEST_REPORTS
+    - cp -r repository-cache-compiler/build/reports/* $CIRCLE_TEST_REPORTS
