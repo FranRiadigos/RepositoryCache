@@ -17,7 +17,9 @@ This is a Java library that can be imported both in Android or Java projects.
 
 ## Dependency
 
-Latest stable version: [![Bintray Version](https://img.shields.io/bintray/v/kuassivi/maven/repository-cache.svg)](https://dl.bintray.com/kuassivi/maven/com/kuassivi/annotation/repository-cache/)
+Latest stable version: 
+[![Latest Version](https://api.bintray.com/packages/kuassivi/maven/repository-cache/images/download.svg) ](https://bintray.com/kuassivi/maven/repository-cache/_latestVersion)
+[![Bintray Version](https://img.shields.io/bintray/v/kuassivi/maven/repository-cache.svg)](https://dl.bintray.com/kuassivi/maven/com/kuassivi/annotation/repository-cache/)
 [![Maven Central](https://img.shields.io/maven-central/v/com.kuassivi.annotation/repository-cache.svg)]()
 
 In order to generate the proxy classes when building your project, 
