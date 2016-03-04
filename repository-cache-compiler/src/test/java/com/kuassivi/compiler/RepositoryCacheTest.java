@@ -158,7 +158,7 @@ public class RepositoryCacheTest {
                     "   public static TestProxyCache getFoo4(File cacheDir) {",
                     "       return new TestProxyCache(cacheDir, \"" + md5_foo6 + "\", 0);",
                     "   }",
-                    "   public static TestProxyCache getFooX2(File cacheDir) {",
+                    "   public static TestProxyCache getFooX25(File cacheDir) {",
                     "       return new TestProxyCache(cacheDir, \"" + md5_foo7 + "\", 500);",
                     "   }",
                     "   public static TestProxyCache getFoo6(File cacheDir) {",
