@@ -5,7 +5,7 @@ machine:
 dependencies:
   cache_directories:
     - ~/.android
-    - ~/android
+    - /usr/local/android-sdk-linux
   pre:
     - echo y | android update sdk --no-ui --all --filter "tools,platform-tools,android-23"
     - echo y | android update sdk --no-ui --all --filter "build-tools-23.0.2"
@@ -13,11 +13,8 @@ dependencies:
 test:
   override:
     - echo "Running JUnit tests!"
-    - ./gradlew clean -PdisablePreDex
-    - ./gradlew build -PdisablePreDex
-    - ./gradlew test -PdisablePreDex
+    - ./gradlew clean build test -PdisablePreDex
   post:
     - mkdir -p $CIRCLE_TEST_REPORTS/junit/
-    - cp -r ~/RepositoryCache/examples/build/outputs $CIRCLE_ARTIFACTS
-    - cp -r ~/RepositoryCache/repository-cache/build/reports/* $CIRCLE_TEST_REPORTS/junit/
-    - cp -r ~/RepositoryCache/repository-cache-compiler/build/reports/* $CIRCLE_TEST_REPORTS/junit/
+    - find . -type f -regex ".*/build/outputs" -exec cp {} $CIRCLE_ARTIFACTS \;
+    - find . -type f -regex ".*/build/reports/*" -exec cp {} $CIRCLE_ARTIFACTS \;
