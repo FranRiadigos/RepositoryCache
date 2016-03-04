@@ -16,4 +16,5 @@ test:
   post:
     - mkdir -p $CIRCLE_TEST_REPORTS/junit/
     - find ~ -regex ".*/build/outputs" -exec cp -r {} $CIRCLE_ARTIFACTS \;
+    - find ~ -type f -regex ".*/build/test-results/.*xml" -exec cp -r {} $CIRCLE_TEST_REPORTS/junit/ \;
     - find ~ -regex ".*/build/reports/*" -exec cp -r {} $CIRCLE_TEST_REPORTS/junit/ \;
