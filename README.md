@@ -1,4 +1,4 @@
-# RepositoryCache
+# RepositoryCache [![Circle CI](https://circleci.com/gh/kuassivi/RepositoryCache/tree/master.svg?style=svg)](https://circleci.com/gh/kuassivi/RepositoryCache/tree/master)
 [![Apache 2.0](https://img.shields.io/hexpm/l/plug.svg)](http://www.apache.org/licenses/LICENSE-2.0) 
 [![Android](https://img.shields.io/badge/platform-android-green.svg)](http://developer.android.com/index.html)
 [![Java](https://img.shields.io/badge/platform-java-red.svg)](http://www.oracle.com/technetwork/java/javaee/overview/index.html)
