@@ -44,6 +44,8 @@ ext {
     allLicenses = ["Apache-2.0"]
 
     mavenPackagin = "pom"
+
+    syncMaven = true
 }
 
 if(localPropExist) {
