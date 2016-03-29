@@ -80,7 +80,9 @@ public class MyRepositoryImpl implements MyRepository {
 
             // persists the method into the cache
             // (it will save the current key assigned if set)
-            cache.persist();
+            if(!cache.isCached()) {
+                cache.persist();
+            }
 
             /*
              * Tip:
@@ -125,7 +127,9 @@ public class MyRepositoryImpl implements MyRepository {
 
             // persists the method into the cache
             // (it will save the current key assigned if set)
-            cache.persist();
+            if(!cache.isCached()) {
+                cache.persist();
+            }
 
             /*
              * Tip:
