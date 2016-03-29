@@ -99,7 +99,7 @@ public final class RepositoryCacheManager {
      * @param proxyCache the ProxyCache object
      */
     public void persist(RepositoryProxyCache proxyCache) {
-        persist(proxyCache, null);
+        persist(proxyCache, proxyCache.getFileName());
     }
 
     /**
