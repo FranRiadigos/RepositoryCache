@@ -68,13 +68,11 @@ public interface MyRepository {
 }
 ```
 
-> Now **build** your project.
-
-> Only Repository interfaces with annotated methods will be processed.
+> Now **build** your project!
 
 Once you have built the project, a new Java Proxy Class will be created in your build source `apt` folder.
 
-The Proxy Class generated will be a kind of: _InterfaceClassName_ + _ProxyCache_ suffix.
+The Proxy Class generated will looks like: _RepositoryClassName_ + _ProxyCache_ suffix.
 
 For instance, `MyRepositoryProxyCache`.
 
@@ -90,19 +88,21 @@ public class MyRepositoryImpl implements MyRepository {
         RepositoryProxyCache cache = MyRepositoryProxyCache.getDataById(context.getCacheDir());
         
         // Ensure we are getting distinct cache instance per id.
-        cache.select( id );
+        cache.select( id ); // Optional
         
-        // Checks whether it is cached and it is not expired.
+        // Checks whether it is cached and not expired.
         if (!cache.isExpired()) {
         
-            // [...] proceed retrieving data from your local store (maybe Realm database)
+            // [...] proceed retrieving data from your local store (maybe a database)
             
         } else {
         
             // [...] otherwise proceed retrieving data from your cloud store (maybe a rest service)
             
-            // Once you persist, it will store this call with the specified id in the cache.
-            cache.persist();
+            // Once you persist, it will store this method name with the specified id in the cache.
+            if(!cache.isCached()) {
+                cache.persist();
+            }
             
         }
     }
@@ -118,17 +118,17 @@ public class MyRepositoryImpl implements MyRepository {
 
 > \- You can cache a method indefinitely, simply do not put any time on the annotation.
 
-> \- Remember to distinguish between calls with an ID or any other logic through `select(id)`.
+> \- Remember you can distinguish between calls with an ID or any other logic through the `select()` method.
 
-> \- You can store content on the cache with `persist(String)` if you are not planning to have a database.
-Just transform your Object from/to a Json string and retrieve that content with `getContent()`.
-
-
+> \- You can i.e. store your content inside the cache with `persist(String)` if you are not planning to have a database.
+Just transform your Object from/to a Json string and retrieve that content later with `getContent()`.
 
 
-## _ProxyCache_ Methods:
 
- *     `select(Object)` - distinguish between different calls of the same method, the parameter should be any kind of id.
+
+## _ProxyCache_ methods:
+
+ *     `select(Object)` - distinguish between different calls of the same method, the parameter should be any kind of an id of your choice.
  *     `isCached()` - returns true if a method call is cached, false otherwise.
  *     `isExpired()` - returns true if a method call is not cached or is expired, false otherwise.
  *     `persist()` - stores a method call in the cache.
@@ -138,7 +138,7 @@ Just transform your Object from/to a Json string and retrieve that content with 
 
 
 
-## _RepositoryCacheManager_ Methods:
+## _RepositoryCacheManager_ utilities:
 
  *     `static hashMD5(String)` - generates a MD5 hash string of the provided String parameter.
  *     `static hashCode(Object...)` - generates a hash code from the provided parameter objects.
