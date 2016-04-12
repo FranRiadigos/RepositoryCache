@@ -62,7 +62,7 @@ Lets see an example:
 ```java
 public interface MyRepository {
 
-    @RepositoryCache(1000 * 60 * 60) // expiration time in ms.
+    @RepositoryCache(DateUtils.MINUTE_IN_MILLIS * 60) // expiration time in ms.
     Object getDataById(int id);
     
 }
