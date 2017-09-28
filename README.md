@@ -114,13 +114,13 @@ public class MyRepositoryImpl implements MyRepository {
 
 ## Tips:
 
-> \- Use always an Interface as a contract. It is much clean.
+ * Always use an Interface as a contract. It is much cleaner.
 
-> \- You can cache a method indefinitely, simply do not put any time on the annotation.
+ * You can cache a method indefinitely, simply do not put any time on the annotation.
 
-> \- Remember you can distinguish between calls with an ID or any other logic through the `select()` method.
+ * Remember you can distinguish between calls with an ID or any other logic through the `select()` method.
 
-> \- You can i.e. store your content inside the cache with `persist(String)` if you are not planning to have a database.
+ * You can i.e. store your content inside the cache with `persist(String)` if you are not planning to have a database.
 Just transform your Object from/to a Json string and retrieve that content later with `getContent()`.
 
 
@@ -128,21 +128,21 @@ Just transform your Object from/to a Json string and retrieve that content later
 
 ## _ProxyCache_ methods:
 
- *     `select(Object)` - distinguish between different calls of the same method, the parameter should be any kind of an id of your choice.
- *     `isCached()` - returns true if a method call is cached, false otherwise.
- *     `isExpired()` - returns true if a method call is not cached or is expired, false otherwise.
- *     `persist()` - stores a method call in the cache.
- *     `persist(String)` - stores a method call in the cache with the provided content.
- *     `getContent()` - retrieves the stored content of a specific method call.
- *     `evict()` - removes a specific method call from the cache.
+ * `select(Object)` - distinguish between different calls of the same method, the parameter should be any kind of an id of your choice.
+ * `isCached()` - returns true if a method call is cached, false otherwise.
+ * `isExpired()` - returns true if a method call is not cached or is expired, false otherwise.
+ * `persist()` - stores a method call in the cache.
+ * `persist(String)` - stores a method call in the cache with the provided content.
+ * `getContent()` - retrieves the stored content of a specific method call.
+ * `evict()` - removes a specific method call from the cache.
 
 
 
 ## _RepositoryCacheManager_ utilities:
 
- *     `static hashMD5(String)` - generates a MD5 hash string of the provided String parameter.
- *     `static hashCode(Object...)` - generates a hash code from the provided parameter objects.
- *     `static evictAll(File)` - removes all cache repositories. You must provide the cache directory.
+ * `static hashMD5(String)` - generates a MD5 hash string of the provided String parameter.
+ * `static hashCode(Object...)` - generates a hash code from the provided parameter objects.
+ * `static evictAll(File)` - removes all cache repositories. You must provide the cache directory.
  
  
  
